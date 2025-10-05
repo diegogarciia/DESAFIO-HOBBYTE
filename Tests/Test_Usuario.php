@@ -2,10 +2,13 @@
 require_once __DIR__ . '/../Helper/Parametros.php';
 require_once __DIR__ . '/../Controller/UsuarioController.php';
 
+// Obtenemos método HTTP
 $metodo = $_SERVER['REQUEST_METHOD'];
 
+// Obtenemos parámetros del body si es POST, PUT o PATCH
 $input = json_decode(file_get_contents('php://input'), true);
 
+// Obtenemos ID si viene en query string (?id=1)
 $id = $_GET['id'] ?? 0;
 
 switch ($metodo) {
@@ -20,7 +23,7 @@ switch ($metodo) {
         }
         break;
 
-    case 'POST': 
+    case 'POST': //Añadir usuario
       $input = json_decode(file_get_contents('php://input'), true); 
 
       $nombre = $input['nombre'] ?? 'UsuarioDefault'; 
@@ -32,7 +35,7 @@ switch ($metodo) {
       echo json_encode(["mensaje" => $mensaje]);
     break;
 
-    case 'PUT': 
+    case 'PUT': // Actualizar usuario
     case 'PATCH':
         $id = $input['id_jugador'] ?? 0;
         $nombre = $input['nombre'] ?? 'UsuarioDefault';
