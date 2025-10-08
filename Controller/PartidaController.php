@@ -45,19 +45,22 @@ class PartidaController {
 
         if ($casilla->getDestapada()) return "Casilla ya destapada";
 
-        // Simulación de resultado de prueba
         $exito = rand(0,1); // 0=falla, 1=éxito
 
-        // Actualizamos la casilla
         CasillaDAO::updateDestapadaExito($casilla->getIdCasilla(), 1, $exito);
 
-        // Actualizamos la partida
         $partida = PartidaDAO::getById($id_partida);
         $partida->setCasillasDestapadas($partida->getCasillasDestapadas() + 1);
         if ($exito) {
             $partida->setCasillasExitosas($partida->getCasillasExitosas() + 1);
         } else {
             $partida->setPerdidasConsecutivas($partida->getPerdidasConsecutivas() + 1);
+        }
+
+        if ($partida->getPerdidasConsecutivas() >= 5) {
+            $partida->setEstado("finalizada(PERDIDA)");
+        } elseif ($partida->getPerdidasConsecutivas() < 5 && $partida->getCasillasDestapadas() == $partida->getTotalCasillas()) {
+            $partida->setEstado("finalizada(GANADA)");
         }
 
         PartidaDAO::update($partida);
