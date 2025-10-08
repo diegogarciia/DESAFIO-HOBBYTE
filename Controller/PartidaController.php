@@ -62,6 +62,11 @@ class PartidaController {
 
         PartidaDAO::update($partida);
 
-        return "Prueba realizada con éxito.";
+        if($exito == 0) {
+            return "Casilla destapada pero prueba sin éxito";
+        } else {
+            return "Casilla destapada y prueba realizada con éxito";            
+        }
+
     }
 }
