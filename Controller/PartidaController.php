@@ -6,6 +6,19 @@ require_once __DIR__ . '/../Model/Casilla.php';
 
 class PartidaController {
 
+    public static function obtenerPartida($id_partida) {
+        $partida = PartidaDAO::getById($id_partida);
+        if ($partida) {
+            return $partida;
+        } else {
+            return ["mensaje" => "Partida no encontrada"];
+        }
+    }
+
+    public static function listarPartidasUsuario($id_usuario) {
+        return PartidaDAO::getByUsuario($id_usuario);
+    }
+
     public static function crearPartida($id_usuario, $nombre, $total_casillas) {
         if (empty($id_usuario) || empty($nombre) || $total_casillas <= 0) {
             return "Datos de partida inválidos.";
