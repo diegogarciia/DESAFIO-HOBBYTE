@@ -9,7 +9,7 @@ class CasillaDAO {
         $sql = "INSERT INTO casilla (id_partida, posicion, habilidad, esfuerzo_requerido, destapada, exito) 
                 VALUES (?, ?, ?, ?, 0, NULL)";
         $stmt = $conexion->prepare($sql);
-        $stmt->bind_param("isii", $id_partida, $posicion, $habilidad, $esfuerzo);
+        $stmt->bind_param("iisi", $id_partida, $posicion, $habilidad, $esfuerzo);
         $stmt->execute();
         $id = $stmt->insert_id;
         $stmt->close();
