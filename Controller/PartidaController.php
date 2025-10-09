@@ -71,9 +71,9 @@ class PartidaController {
         }
 
         if ($partida->getPerdidasConsecutivas() >= 5) {
-            $partida->setEstado("finalizada(PERDIDA)");
+            $partida->setEstado("perdida");
         } elseif ($partida->getPerdidasConsecutivas() < 5 && $partida->getCasillasDestapadas() == $partida->getTotalCasillas()) {
-            $partida->setEstado("finalizada(GANADA)");
+            $partida->setEstado("ganada");
         }
 
         PartidaDAO::update($partida);
