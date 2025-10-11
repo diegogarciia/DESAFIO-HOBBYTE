@@ -93,7 +93,7 @@ try {
             
             $partida = PartidaController::obtenerPartida($id_partida);
             
-            if (!$partida || (is_array($partida) && isset($partida["mensaje"]))) {
+            if (!$partida) {
                 echo json_encode(["error" => "Partida no encontrada."]);
                 break;
             }
@@ -105,11 +105,6 @@ try {
                 break;
             }
             
-            $heroe = $heroesPartida[0]; 
-            $poderActual = $heroe["poder_actual"];
-            $fallosConsecutivos = 0;
-            $exitos = 0;
-            
             $casillas = CasillaController::listarCasillas($id_partida);
             
             if (!is_array($casillas)) {
@@ -117,49 +112,91 @@ try {
                 break;
             }
             
+            $fallosConsecutivos = 0;
+            $casillasDestapadas = 0;
+            $casillasExitosas = 0;
+            $resultado = "";
+
             foreach ($casillas as $casilla) {
                 
-                if ($fallosConsecutivos >= 5) break; 
+                if ($fallosConsecutivos >= 5) break;
                 
-                $habilidad = $casilla["habilidad"];
+                $habilidadCasilla = $casilla["habilidad"];
                 $esfuerzo = $casilla["esfuerzo_requerido"];
+                $casillaSuperada = false;
                 
-                if ($poderActual >= $esfuerzo) {
-                    $poderActual -= $esfuerzo;
-                    $exitos++;
-                    $fallosConsecutivos = 0;
+                foreach ($heroesPartida as &$heroe) {
                     
+                    if ($heroe["derrotado"]) continue;
                     
-                PartidaHeroeController::actualizarPoder($heroe["id_partida_heroe"], $poderActual);
-                CasillaController::destapar($id_partida, $casilla["posicion"]);
-            
-            } else {
-                $fallosConsecutivos++;
+                    $heroeInfo = HeroeController::obtenerHeroe($heroe["id_heroe"]);
+                    
+                    if (!$heroeInfo) continue;
+                    
+                    $habilidadHeroe = $heroeInfo["habilidad"];
+                    $poderActual = $heroe["poder_actual"];
+                    
+                    if ($habilidadHeroe == $habilidadCasilla) {
+                        
+                        if ($poderActual >= $esfuerzo) {
+                            
+                            $poderActual -= $esfuerzo;
+                            $heroe["poder_actual"] = $poderActual;
+                            $casillasExitosas++;
+                            $casillaSuperada = true;
+                            $fallosConsecutivos = 0;
+                            
+                            PartidaHeroeController::actualizarPoder($heroe["id_partida_heroe"], $poderActual);
+                            CasillaController::destapar($id_partida, $casilla["posicion"], true);
+                        
+                        } else {
+                            $fallosConsecutivos++;
+                            CasillaController::destapar($id_partida, $casilla["posicion"], false);
+                            
+                            if ($poderActual <= 0) {
+                                PartidaHeroeController::marcarDerrotado($heroe["id_partida_heroe"]);
+                                $heroe["derrotado"] = 1;
+                            }
+                        }
+                        
+                        $casillasDestapadas++;
+                        break; 
+                    }
+                }
+                
+                if (!$casillaSuperada && $fallosConsecutivos < 5) {
+                    continue;
+                }
             }
-        }
-        
-        if ($fallosConsecutivos >= 5) {
-            $partida->setEstado("perdida");
+            
+            $partida->setCasillasDestapadas($casillasDestapadas);
+            $partida->setCasillasExitosas($casillasExitosas);
+            $partida->setPerdidasConsecutivas($fallosConsecutivos);
+            
+            if ($fallosConsecutivos >= 5) {
+                $partida->setEstado("perdida");
+                $resultado = "La partida terminó tras 5 fallos consecutivos.";
+            } elseif ($casillasExitosas === count($casillas)) {
+                $partida->setEstado("ganada");
+                $resultado = "¡Partida completada con éxito! Todos los héroes superaron sus desafíos.";
+            } else {
+                $partida->setEstado("en curso");
+                $resultado = "La partida sigue activa.";
+            }
+            
             PartidaDAO::update($partida);
-            $resultado = "El héroe ha sido derrotado tras 5 fallos consecutivos.";
-        } elseif ($exitos === count($casillas)) {
-            $partida->setEstado("ganada");
-            PartidaDAO::update($partida);
-            $resultado = "¡Partida completada con éxito! El héroe superó todas las pruebas.";
-        } else {
-            $resultado = "La partida finalizó antes de completar todas las casillas.";
-        }
+            
+            echo json_encode([
+                "id_partida" => $id_partida,
+                "resultado" => $resultado,
+                "casillas_destapadas" => $casillasDestapadas,
+                "casillas_exitosas" => $casillasExitosas,
+                "fallos_consecutivos" => $fallosConsecutivos
+            ]);
+            
+            break;
         
-        echo json_encode([
-            "id_partida" => $id_partida,
-            "heroe" => $heroe["id_heroe"],
-            "resultado" => $resultado,
-            "poder_final" => $poderActual,
-            "casillas_superadas" => $exitos,
-            "fallos_consecutivos" => $fallosConsecutivos
-        ]);
-        break;
-    }
+        }
 
 } catch (Exception $e) {
     echo json_encode(["error" => $e->getMessage()]);

@@ -16,16 +16,20 @@ class CasillaController {
         return $casillas_array;
     }
 
-    public static function destapar($id_partida, $posicion) {
+    public static function destapar($id_partida, $posicion, $exito = null) {
         $casilla = CasillaDAO::getByPosicion($id_partida, $posicion);
+        
         if (!$casilla) return "Casilla no encontrada.";
-
-        $exito = rand(0,1);
+        
+        if ($exito === null) $exito = false;
+        
         $casilla->setDestapada(1);
-        $casilla->setExito($exito);
-
-        CasillaDAO::updateDestapadaExito($casilla->getIdCasilla(), 1, $exito);
-
+        $casilla->setExito($exito ? 1 : 0);
+        
+        CasillaDAO::updateDestapadaExito($casilla->getIdCasilla(), 1, $casilla->getExito());
+        
         return $exito ? "Casilla destapada con éxito." : "Casilla destapada pero prueba fallida.";
     }
+
+
 }
