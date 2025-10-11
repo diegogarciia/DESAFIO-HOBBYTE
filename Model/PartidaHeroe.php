@@ -33,5 +33,18 @@ class PartidaHeroe {
     public function setPoderActual($poder_actual) { $this->poder_actual = $poder_actual; }
     public function setActivo($activo) { $this->activo = $activo; }
     public function setDerrotado($derrotado) { $this->derrotado = $derrotado; }
+
+    public function toArray() {
+    return [
+        "id_partida_heroe" => $this->id_partida_heroe,
+        "id_partida" => $this->id_partida,
+        "id_heroe" => $this->id_heroe,
+        "poder_inicial" => $this->poder_inicial,
+        "poder_actual" => $this->poder_actual,
+        "activo" => $this->activo,
+        "derrotado" => $this->derrotado
+    ];
+}
+
 }
 ?>
