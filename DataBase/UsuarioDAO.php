@@ -4,11 +4,11 @@ require_once __DIR__ . '/../Model/Usuario.php';
 
 class UsuarioDAO {
 
-    public static function insert($nombre, $correo, $contrasena) {
+    public static function insert($nombre, $correo, $contrasena, $rol) {
         $conexion = Database::connect();
-        $sql = "INSERT INTO usuario (nombre, correo, contrasena) VALUES (?, ?, ?)";
+        $sql = "INSERT INTO usuario (nombre, correo, contrasena, rol) VALUES (?, ?, ?, ?)";
         $stmt = $conexion->prepare($sql);
-        $stmt->bind_param("sss", $nombre, $correo, $contrasena);
+        $stmt->bind_param("ssss", $nombre, $correo, $contrasena, $rol);
         $stmt->execute();
         $id = $stmt->insert_id;
         $stmt->close();
@@ -92,6 +92,59 @@ class UsuarioDAO {
     return $filas_afectadas > 0; 
     }
 
+    public static function verificarCredenciales($correo, $contrasena) {
+    $conexion = Database::connect();
+    $sql = "SELECT * FROM usuario WHERE correo = ?";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("s", $correo);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    $usuario = null;
+    if ($fila = $resultado->fetch_assoc()) {
+        if ($fila["contrasena"] === $contrasena) {
+            $usuario = [
+                "id_jugador" => $fila["id_jugador"],
+                "nombre" => $fila["nombre"],
+                "correo" => $fila["correo"],
+                "rol" => $fila["rol"]
+            ];
+        }
+    }
+
+    $stmt->close();
+    $conexion->close();
+    return $usuario;
+}
+
+public static function cambiarContrasena($correo, $nuevaContrasena) {
+    $conexion = Database::connect();
+
+    $check = $conexion->prepare("SELECT id_jugador FROM usuario WHERE correo = ?");
+    $check->bind_param("s", $correo);
+    $check->execute();
+    $resultado = $check->get_result();
+
+    if ($resultado->num_rows === 0) {
+        $check->close();
+        $conexion->close();
+        return false; 
+    }
+
+    $check->close();
+
+    $sql = "UPDATE usuario SET contrasena = ? WHERE correo = ?";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("ss", $nuevaContrasena, $correo);
+    $stmt->execute();
+
+    $ok = ($stmt->affected_rows > 0 || $stmt->errno === 0);
+
+    $stmt->close();
+    $conexion->close();
+    return $ok;
+}
+
 
 
     public static function update(Usuario $usuario) {
@@ -116,5 +169,8 @@ class UsuarioDAO {
     $conexion->close();
 
     return $filasAfectadas > 0;
+
 }
+
+
 }
