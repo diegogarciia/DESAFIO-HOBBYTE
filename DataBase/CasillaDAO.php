@@ -42,15 +42,17 @@ class CasillaDAO {
         $conexion->close();
         return $casillas;
     }
-
+    
     public static function updateDestapadaExito($id_casilla, $destapada, $exito) {
         $conexion = Database::connect();
-        $sql = "UPDATE casilla SET destapada=?, exito=? WHERE id_casilla=?";
+        $sql = "UPDATE casilla SET destapada = ?, exito = ? WHERE id_casilla = ?";
         $stmt = $conexion->prepare($sql);
         $stmt->bind_param("iii", $destapada, $exito, $id_casilla);
         $stmt->execute();
+        $filas = $stmt->affected_rows;
         $stmt->close();
         $conexion->close();
+        return $filas > 0;
     }
 
     public static function getById($id_casilla) {
