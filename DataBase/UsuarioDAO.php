@@ -16,6 +16,21 @@ class UsuarioDAO {
         return $id;
     }
 
+    public static function contarPartidasUsuario($id_usuario) {
+    $conexion = Database::connect();
+    $sql = "SELECT COUNT(*) AS total FROM partida WHERE id_usuario = ?";
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $id_usuario);
+    $stmt->execute();
+    $resultado = $stmt->get_result()->fetch_assoc();
+
+    $stmt->close();
+    $conexion->close();
+
+    return $resultado ? (int)$resultado["total"] : 0;
+}
+
+
     public static function getByCorreo($correo) {
         $conexion = Database::connect();
         $sql = "SELECT * FROM usuario WHERE correo = ?";

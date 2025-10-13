@@ -142,6 +142,11 @@ try {
             $id_usuario = $input['id_usuario'] ?? 1;
             $nombre = $input['nombre'] ?? 'PartidaDefault';
             $total_casillas = $input['total_casillas'] ?? 20;
+            $verificacion = UsuarioController::puedeCrearPartida($id_usuario);
+            if (isset($verificacion["error"])) {
+                echo json_encode($verificacion);
+                break;
+            }
             $mensaje = PartidaController::crearPartida($id_usuario, $nombre, $total_casillas);
             echo json_encode(["mensaje" => $mensaje]);
             break;

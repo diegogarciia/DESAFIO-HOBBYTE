@@ -18,6 +18,22 @@ class UsuarioController {
         return "Usuario creado correctamente";
     }
 
+    public static function puedeCrearPartida($id_usuario) {
+    $total = UsuarioDAO::contarPartidasUsuario($id_usuario);
+
+    if ($total >= 2) {
+        return [
+            "error" => "El usuario ya tiene el máximo de 2 partidas creadas."
+        ];
+    }
+
+    return [
+        "ok" => true,
+        "mensaje" => "El usuario puede crear una nueva partida."
+    ];
+}
+
+
     public static function actualizarUsuario(Usuario $usuario) {
         $exito = UsuarioDAO::update($usuario);
         return $exito ? "Usuario actualizado correctamente." : "No se pudo actualizar el usuario.";
